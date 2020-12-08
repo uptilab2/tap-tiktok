@@ -7,7 +7,8 @@ from singer.catalog import Catalog, CatalogEntry
 from singer.schema import Schema
 
 
-REQUIRED_CONFIG_KEYS = ["start_date", "username", "password"]
+REQUIRED_CONFIG_KEYS = ["access_token"]
+API_URL = "https://ads.tiktok.com/open_api"
 LOGGER = singer.get_logger()
 
 

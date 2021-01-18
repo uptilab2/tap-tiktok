@@ -1,82 +1,79 @@
 
 import singer
 import requests
-import time
-import tempfile
-import csv
-import json
-import backoff
-import io
-from datetime import datetime, timedelta
+from tap_tiktok.schema import DIMENSIONS
+
 
 logger = singer.get_logger()
 BASE_API_URL = 'https://ads.tiktok.com/open_api/v1.1'
-POLLING_TIME = 60 # 1 minute is the recommandation
+
+# query limits
+QUERIES_SECOND = 10
+QUERIES_MINUTE = 600
+QUERIES_DAY = 864000
 
 
 class ClientHttpError(Exception):
     pass
 
-class ClientTooManyRequestError(Exception):
-    pass
-
-class ClientHttp5xxError(Exception):
-    pass
-
-class ClientExpiredError(Exception):
-    pass
 
 class TiktokClient:
     """
         Handle tiktok consolidated reporting request
         ressource : https://ads.tiktok.com/marketing_api/docs?rid=l3f3i273f9k&id=1685752851588097
     """
-    def __init__(self, advertiser_id, access_token):
-        self.advertiser_id = advertiser_id
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        logger.info("client closed")
+
+    def __init__(self, access_token, advertiser_ids, data_level):
         self.access_token = access_token
-        self.expires = None
-        self.session = requests.Session()
-    
-    def __exit__(self, *args):
-        self.session.close()
-        
-    @backoff.on_exception(backoff.expo, (ClientTooManyRequestError, ClientExpiredError), max_tries=7)
-    def do_request(self, url, **kwargs):
+        self.advertiser_ids = advertiser_ids
+        self.data_level = data_level
 
-        req = requests.get
-
-        if not kwargs.get('headers'):
-            kwargs['headers'] = {"Access-Token": self.access_token, "Content-Type": "application/json"}
-        if not kwargs.get('params'):
-            kwargs['params'] = {"advertiser_id": self.advertiser_id}
-        
-        response = req(url=url, **kwargs)
+    def do_request(self, url, params={}):
+        headers = {"Access-Token": self.access_token, "Content-Type": "application/json"}
+        params = {"advertiser_id": self.advertiser_ids[0], **params}
+        # logger.info((headers, params))
+        response = requests.get(
+            url=url,
+            headers=headers,
+            json=params
+        )
         logger.info(f'request api: {url}, response status: {response.status_code}')
-        if response.status_code == 200 or response.status_code == 202:
-            return response
 
-        #handle error
-        error_response = response.json()
+        result = response.json()
         if response.status_code == 429:
-            raise ClientTooManyRequestError(f'Too many requests, retry ..')
+            raise ClientHttpError('Too many requests, retry ..')
         elif response.status_code == 401:
-            raise ClientExpiredError(f'Token is expired, retry ..')
-        else:
-            message = error_response['error']['errors'][0]['message']
-            raise ClientHttpError(f'{response.status_code}: {message}')
+            raise ClientHttpError('Token is expired, retry ..')
+        elif response.status_code == 200 or response.status_code == 202:
+            if not result.get("data") and result.get("message"):
+                raise ClientHttpError(f"[{result.get('code', 0)}] {result['message']}")
+        return result["data"]
 
-    def request_report(self):
+    def request_report(self, stream):
+        # logger.info(stream)
+        service_type, report_type = stream.tap_stream_id.upper().split('_')
         params = {
-            "advertiser_id": self.advertiser_id,
-            "report_type": ,
-            "start_date": "2020-10-10",
-            "end_date": "2020-11-10",
+            "report_type": report_type,
+            "service_type": service_type,
+            "data_level": "AUCTION_AD",
+            "dimensions": ["stat_time_day", "ad_id"],
+            "metrics": [m for m in stream.schema.properties.keys() if m not in DIMENSIONS],
+            "start_date": "2021-01-01",
+            "end_date": "2021-01-18",
             "page": 1,
             "page_size": 100
         }
-        response = self.do_request(f"{BASE_API_URL}/reports/integrated/get/", params=params)
-        resp = response.json()
-        logger.critical(resp)
-        return resp
+        data = []
+        total_page = 2
+        while total_page > params["page"]:
+            result = self.do_request(f"{BASE_API_URL}/reports/integrated/get/", params=params)
+            data += result["list"]
+            params["page"] += 1
+            total_page = result["page_info"]["total_page"]
 
-
+        return data

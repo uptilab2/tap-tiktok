@@ -4,8 +4,8 @@ from setuptools import setup
 setup(
     name="tap-tiktok",
     version="0.1.0",
-    description="Singer.io tap for extracting data",
-    author="Stitch",
+    description="Singer.io tap for extracting tiktok ads data",
+    author="Giovanni Dall'ava",
     url="http://singer.io",
     classifiers=["Programming Language :: Python :: 3 :: Only"],
     py_modules=["tap_tiktok"],

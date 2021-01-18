@@ -1,6 +1,6 @@
 {
     "type": ["null", "object"],
-    "additionalProperties": false,
+	"additionalProperties": false,
     "properties": {
 		"advertiser_id": {"type": ["null", "number"]},
 		"ad_id": {"type": ["null", "number"]},

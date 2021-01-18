@@ -1,21 +1,33 @@
-import os
-import singer
-import hashlib
-import json
-from copy import copy
-from datetime import datetime, timedelta
 
 
-logger = singer.get_logger()
-
-
-possible_params : {
-    "service_type": ["AUCTION", "RESERVATION"],
-    "report_type": ["BASIC", "AUDIENCE", "PLAYABLE_MATERIAL"],
-    "data_level": ["AUCTION_AD", "AUCTION_ADGROUP", "AUCTION_ADVERTISER", "AUCTION_CAMPAIGN", "RESERVATION_AD", "RESERVATION_ADVERTISER", "RESERVATION_CAMPAIGN"]
-}
-
-AVAILABLE_STREAMS = {
-    "RESERVATION": ["BASIC"],
-    "AUCTION", ["BASIC", "AUDIENCE", "PLAYABLE_MATERIAL"]
+STREAMS = {
+    "service_type": {
+        "AUCTION": {
+            "report_type": {
+                "BASIC": {
+                    "data_level": ["AUCTION_AD", "AUCTION_ADGROUP", "AUCTION_ADVERTISER", "AUCTION_CAMPAIGN"],
+                    "dimensions": ["advertiser_id", "campaign_id", "adgroup_id", "ad_id", "stat_time_day", "stat_time_hour"]
+                },
+                "AUDIENCE": {
+                    "data_level": ["AUCTION_AD", "AUCTION_ADGROUP", "AUCTION_ADVERTISER", "AUCTION_CAMPAIGN"],
+                    "dimensions": ["advertiser_id", "campaign_id", "adgroup_id", "ad_id", "stat_time_day", "stat_time_hour", "gender", "age", "country_code", "ac", "language", "platform", "interest_category", "placement"]
+                },
+                "PLAYABLE_MATERIAL": {
+                    "dimensions": ["playable_id", "country_code	"]
+                },
+            }
+        },
+        "RESERVATION": {
+            "report_type": {
+                "BASIC"{
+                    "data_level": {
+                        "RESERVATION_AD",
+                        "RESERVATION_ADVERTISER",
+                        "RESERVATION_CAMPAIGN",
+                    },
+                    "dimensions": ["advertiser_id", "campaign_id", "adgroup_id", "ad_id", "stat_time_day", "stat_time_hour"]
+                },
+            }
+        },
+    }
 }

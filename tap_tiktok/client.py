@@ -45,6 +45,7 @@ class TiktokClient:
         logger.info(f'request api: {url}, response status: {response.status_code}')
 
         result = response.json()
+        logger.info(result)
         if response.status_code == 429:
             raise ClientHttpError('Too many requests, retry ..')
         elif response.status_code == 401:
@@ -57,23 +58,14 @@ class TiktokClient:
     def request_report(self, stream):
         service_type, report_type = stream.tap_stream_id.upper().split('_')
         mdata = singer.metadata.to_map(stream.metadata)[()]
-        logger.info(" ")
-        logger.info(" ")
-        logger.info(" ")
-        logger.info(mdata["data_level"][self.data_level].get("unsupported_metrics", []))
-        logger.info([
-                m
-                for m in stream.schema.properties.keys()
-                if m not in mdata["data_level"][self.data_level].get("unsupported_metrics", [])
-            ])
-        logger.info(" ")
-        logger.info(" ")
-        logger.info(" ")
+        dimensions = [f"{self.data_level.split('_')[-1].lower()}_id", self.time_dimension]
+        if self.id_dimension and self.id_dimension in mdata.get("dimensions", []):
+            dimensions.append(self.id_dimension)
         params = {
             "report_type": report_type,
             "service_type": service_type,
             "data_level": self.data_level,
-            "dimensions": [self.id_dimension, self.time_dimension],
+            "dimensions": dimensions,
             "metrics": [
                 m
                 for m in stream.schema.properties.keys()

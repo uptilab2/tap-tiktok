@@ -1,0 +1,33 @@
+{
+    "type": [
+        "null",
+        "object"
+    ],
+    "additionalProperties": false,
+    "properties": {
+        "campaign_name": {"type": ["null", "string"]},
+        "campaign_id": {"type": ["null", "number"]},
+        "adgroup_name": {"type": ["null", "string"]},
+        "adgroup_id": {"type": ["null", "number"]},
+        "ad_name": {"type": ["null", "string"]},
+        "ad_text": {"type": ["null", "string"]},
+        "spend": {"type": ["null", "string"]},
+        "cpc": {"type": ["null", "string"]},
+        "cpm": {"type": ["null", "string"]},
+        "impressions": {"type": ["null", "string"]},
+        "clicks": {"type": ["null", "string"]},
+        "ctr": {"type": ["null", "string"]},
+        "conversion": {"type": ["null", "string"]},
+        "cost_per_conversion": {"type": ["null", "string"]},
+        "conversion_rate": {"type": ["null", "string"]},
+        "real_time_conversion": {"type": ["null", "string"]},
+        "real_time_cost_per_conversion": {"type": ["null", "string"]},
+        "real_time_conversion_rate": {"type": ["null", "string"]},
+        "result": {"type": ["null", "string"]},
+        "cost_per_result": {"type": ["null", "string"]},
+        "result_rate": {"type": ["null", "string"]},
+        "real_time_result": {"type": ["null", "string"]},
+        "real_time_cost_per_result": {"type": ["null", "string"]},
+        "real_time_result_rate": {"type": ["null", "string"]}
+    }
+}

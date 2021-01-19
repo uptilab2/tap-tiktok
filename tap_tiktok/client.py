@@ -1,7 +1,6 @@
 
 import singer
 import requests
-from tap_tiktok.schema import DIMENSIONS
 
 
 logger = singer.get_logger()
@@ -28,15 +27,16 @@ class TiktokClient:
     def __exit__(self, exception_type, exception_value, traceback):
         logger.info("client closed")
 
-    def __init__(self, access_token, advertiser_ids, data_level):
+    def __init__(self, access_token, advertiser_ids, data_level, id_dimension, time_dimension):
         self.access_token = access_token
         self.advertiser_ids = advertiser_ids
         self.data_level = data_level
+        self.id_dimension = id_dimension
+        self.time_dimension = time_dimension
 
     def do_request(self, url, params={}):
         headers = {"Access-Token": self.access_token, "Content-Type": "application/json"}
         params = {"advertiser_id": self.advertiser_ids[0], **params}
-        # logger.info((headers, params))
         response = requests.get(
             url=url,
             headers=headers,
@@ -55,15 +55,31 @@ class TiktokClient:
         return result["data"]
 
     def request_report(self, stream):
-        # logger.info(stream)
         service_type, report_type = stream.tap_stream_id.upper().split('_')
+        mdata = singer.metadata.to_map(stream.metadata)[()]
+        logger.info(" ")
+        logger.info(" ")
+        logger.info(" ")
+        logger.info(mdata["data_level"][self.data_level].get("unsupported_metrics", []))
+        logger.info([
+                m
+                for m in stream.schema.properties.keys()
+                if m not in mdata["data_level"][self.data_level].get("unsupported_metrics", [])
+            ])
+        logger.info(" ")
+        logger.info(" ")
+        logger.info(" ")
         params = {
             "report_type": report_type,
             "service_type": service_type,
-            "data_level": "AUCTION_AD",
-            "dimensions": ["stat_time_day", "ad_id"],
-            "metrics": [m for m in stream.schema.properties.keys() if m not in DIMENSIONS],
-            "start_date": "2021-01-01",
+            "data_level": self.data_level,
+            "dimensions": [self.id_dimension, self.time_dimension],
+            "metrics": [
+                m
+                for m in stream.schema.properties.keys()
+                if m not in mdata["data_level"][self.data_level].get("unsupported_metrics", [])
+            ],
+            "start_date": "2021-01-18",
             "end_date": "2021-01-18",
             "page": 1,
             "page_size": 100

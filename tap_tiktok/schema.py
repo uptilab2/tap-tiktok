@@ -1,21 +1,9 @@
 import os
 import json
 import singer
+from tap_tiktok.streams import STREAMS
 
 logger = singer.get_logger()
-
-possible_params = {
-    "service_type": ["AUCTION", "RESERVATION"],
-    "report_type": ["BASIC", "AUDIENCE", "PLAYABLE_MATERIAL"],
-    "data_level": ["AUCTION_AD", "AUCTION_ADGROUP", "AUCTION_ADVERTISER", "AUCTION_CAMPAIGN", "RESERVATION_AD", "RESERVATION_ADVERTISER", "RESERVATION_CAMPAIGN"]
-}
-
-AVAILABLE_STREAMS = {
-    "RESERVATION": ["BASIC"],
-    "AUCTION": ["BASIC", "AUDIENCE", "PLAYABLE_MATERIAL"]
-}
-
-DIMENSIONS = ['advertiser_id', 'campaign_id', 'adgroup_id', 'ad_id', 'stat_time_day', 'stat_time_hour']
 
 
 def get_abs_path(path):
@@ -30,4 +18,9 @@ def get_schemas():
         file_raw = filename.replace('.json', '')
         with open(path) as file:
             schemas[file_raw] = json.load(file)
+
+        service, report = file_raw.upper().split("_")
+        metadata[file_raw] = STREAMS["service_type"].get(service, {}).get("report_type", {}).get(report, {})
+        metadata[file_raw]["service_type"] = service
+        metadata[file_raw]["report_type"] = report
     return schemas, metadata

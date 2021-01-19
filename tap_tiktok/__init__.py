@@ -7,7 +7,7 @@ from tap_tiktok.client import TiktokClient
 
 
 API_URL = "https://ads.tiktok.com/open_api"
-LOGGER = singer.get_logger()
+logger = singer.get_logger()
 
 
 REQUIRED_CONFIG_KEYS = [
@@ -16,21 +16,19 @@ REQUIRED_CONFIG_KEYS = [
 ]
 
 
-def do_discover():
+def do_discover(config):
 
-    LOGGER.info('Starting discover')
-    catalog = discover()
+    logger.info('Starting discover')
+    catalog = discover(config)
     json.dump(catalog.to_dict(), sys.stdout, indent=2)
-    LOGGER.info('Finished discover')
+    logger.info('Finished discover')
 
 
 def sync(client, config, state, catalog):
     """ Sync data from tap source """
     # Loop over selected streams in catalog
     for stream in catalog.get_selected_streams(state):
-        if f"{config['service_type']}_{config['report_type']}".lower() != stream.tap_stream_id:
-            continue
-        LOGGER.info("Syncing stream:" + stream.tap_stream_id)
+        logger.info("Syncing stream:" + stream.tap_stream_id)
 
         bookmark_column = stream.replication_key
         is_sorted = True  # TODO: indicate whether data is sorted ascending on bookmark value
@@ -43,7 +41,6 @@ def sync(client, config, state, catalog):
 
         # TODO: delete and replace this inline function with your own data retrieval process:
         tap_data = client.request_report(stream)
-        LOGGER.info(tap_data)
         max_bookmark = None
         for row in tap_data:
             # TODO: place type conversions or transformations here
@@ -62,7 +59,7 @@ def sync(client, config, state, catalog):
     return
 
 
-@singer.utils.handle_top_exception(LOGGER)
+@singer.utils.handle_top_exception(logger)
 def main():
     # Parse command line arguments
     parsed_args = singer.utils.parse_args(REQUIRED_CONFIG_KEYS)
@@ -70,10 +67,12 @@ def main():
     with TiktokClient(
         config['access_token'],
         config['advertiser_ids'],
-        config['data_level']
+        config['data_level'],
+        config['id_dimension'],
+        config['time_dimension']
     ) as client:
         if parsed_args.discover:
-            do_discover()
+            do_discover(config)
         elif parsed_args.catalog:
             sync(
                 client=client,

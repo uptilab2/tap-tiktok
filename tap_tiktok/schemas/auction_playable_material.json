@@ -2,6 +2,7 @@
     "type": ["null", "object"],
 	"additionalProperties": false,
     "properties": {
+        "country_code": {"type": ["null", "string"]},
         "playable_id": {"type": ["null", "string"]},
         "playable_name": {"type": ["null", "string"]},
         "playable_url": {"type": ["null", "string"]},

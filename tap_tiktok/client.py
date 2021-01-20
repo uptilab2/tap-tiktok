@@ -59,32 +59,46 @@ class TiktokClient:
     def request_report(self, stream):
         service_type, report_type = stream.tap_stream_id.upper().split('_', 1)
         mdata = singer.metadata.to_map(stream.metadata)[()]
-        dimensions = [f"{self.data_level.split('_')[-1].lower()}_id", self.time_dimension]
+        has_data_level = self.data_level and self.data_level in mdata.get("data_level", {})
+        dimensions = []
+        if has_data_level:
+            dimensions = [f"{self.data_level.split('_')[-1].lower()}_id", self.time_dimension]
         if self.id_dimension and self.id_dimension in mdata.get("dimensions", []):
             dimensions.append(self.id_dimension)
         params = {
             "report_type": report_type,
             "service_type": service_type,
-            "data_level": self.data_level,
             "dimensions": dimensions,
             "metrics": [
                 m
                 for m in stream.schema.properties.keys()
-                if m not in mdata["data_level"][self.data_level].get("unsupported_metrics", [])
+                if m not in mdata.get("data_level", {}).get(self.data_level, {}).get("unsupported_metrics", [])
             ],
             "start_date": "2021-01-18",
             "end_date": "2021-01-18",
             "page": 1,
             "page_size": 100
         }
+        if has_data_level:
+            params["data_level"] = self.data_level
         data = []
         total_page = 2
         while total_page > params["page"]:
             if params["page"] > 1:
                 time.sleep(1/QUERIES_SECOND)
             result = self.do_request(f"{BASE_API_URL}/reports/integrated/get/", params=params)
-            data += result["list"]
+            data += parse_results(result["list"])
             params["page"] += 1
             total_page = result["page_info"]["total_page"]
 
         return data
+
+
+def parse_results(result):
+    return [
+        {
+            **r["metrics"],
+            **r["dimensions"]
+        }
+        for r in result
+    ]

@@ -2,6 +2,7 @@
 import singer
 import requests
 import time
+from datetime import datetime, timedelta
 
 
 logger = singer.get_logger()
@@ -28,12 +29,14 @@ class TiktokClient:
     def __exit__(self, exception_type, exception_value, traceback):
         logger.info("client closed")
 
-    def __init__(self, access_token, advertiser_ids, data_level, id_dimension, time_dimension):
+    def __init__(self, access_token, advertiser_ids, data_level, id_dimension, time_dimension, start_date, end_date):
         self.access_token = access_token
         self.advertiser_ids = advertiser_ids
         self.data_level = data_level
         self.id_dimension = id_dimension
         self.time_dimension = time_dimension
+        self.start_date = start_date
+        self.end_date = end_date
 
     def do_request(self, url, params={}):
         headers = {"Access-Token": self.access_token, "Content-Type": "application/json"}
@@ -60,11 +63,16 @@ class TiktokClient:
         service_type, report_type = stream.tap_stream_id.upper().split('_', 1)
         mdata = singer.metadata.to_map(stream.metadata)[()]
         has_data_level = self.data_level and self.data_level in mdata.get("data_level", {})
+
         dimensions = []
         if has_data_level:
-            dimensions = [f"{self.data_level.split('_')[-1].lower()}_id", self.time_dimension]
+            dimensions.append(f"{self.data_level.split('_')[-1].lower()}_id")
+        if self.time_dimension:
+            dimensions.append(self.time_dimension)
         if self.id_dimension and self.id_dimension in mdata.get("dimensions", []):
             dimensions.append(self.id_dimension)
+
+        yesterday = datetime.now() - timedelta(1)
         params = {
             "report_type": report_type,
             "service_type": service_type,
@@ -74,8 +82,8 @@ class TiktokClient:
                 for m in stream.schema.properties.keys()
                 if m not in mdata.get("data_level", {}).get(self.data_level, {}).get("unsupported_metrics", [])
             ],
-            "start_date": "2021-01-18",
-            "end_date": "2021-01-18",
+            "start_date": self.start_date or yesterday.strftime("%Y-%m-%d"),
+            "end_date": self.end_date or yesterday.strftime("%Y-%m-%d"),
             "page": 1,
             "page_size": 100
         }

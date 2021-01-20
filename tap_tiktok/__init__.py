@@ -56,6 +56,10 @@ def sync(client, config, state, catalog):
                     max_bookmark = max(max_bookmark, row[bookmark_column])
         if bookmark_column and not is_sorted:
             singer.write_state({stream.tap_stream_id: max_bookmark})
+
+        bookmark = singer.get_bookmark(state, stream.tap_stream_id, config.get('advertiser_id'), {})
+        if not bookmark:
+            bookmark['date'] = config.get('start_date')
     return
 
 
@@ -67,9 +71,11 @@ def main():
     with TiktokClient(
         config['access_token'],
         config['advertiser_ids'],
-        config['data_level'],
-        config['id_dimension'],
-        config['time_dimension']
+        config.get('data_level'),
+        config.get('id_dimension'),
+        config.get('time_dimension'),
+        config.get('start_date'),
+        config.get('end_date')
     ) as client:
         if parsed_args.discover:
             do_discover(config)

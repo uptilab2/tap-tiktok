@@ -12,7 +12,6 @@ def discover(config):
     for stream_name, schema_dict in schemas.items():
         schema = Schema.from_dict(schema_dict)
         mdata = field_metadata.get(stream_name, {})
-        mdata["selected"] = config['service_type'] == mdata['service_type'] and config['report_type'] == mdata['report_type']
 
         catalog.streams.append(CatalogEntry(
             stream=stream_name,

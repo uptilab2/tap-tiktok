@@ -78,7 +78,7 @@ def main():
         config.get('end_date')
     ) as client:
         if parsed_args.discover:
-            do_discover(config)
+            do_discover()
         elif parsed_args.catalog:
             sync(
                 client=client,

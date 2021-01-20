@@ -5,7 +5,7 @@ from tap_tiktok.schema import get_schemas
 logger = get_logger()
 
 
-def discover(config):
+def discover():
     schemas, field_metadata = get_schemas()
     catalog = Catalog([])
 

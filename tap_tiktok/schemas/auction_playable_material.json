@@ -1,0 +1,27 @@
+{
+    "type": ["null", "object"],
+	"additionalProperties": false,
+    "properties": {
+        "playable_id": {"type": ["null", "string"]},
+        "playable_name": {"type": ["null", "string"]},
+        "playable_url": {"type": ["null", "string"]},
+        "preview_url": {"type": ["null", "string"]},
+        "create_time": {"type": ["null", "string"], "format": "date-time"},
+        "modify_time": {"type": ["null", "string"], "format": "date-time"},
+        "playable_status": {"type": ["null", "string"]},
+        "orientation": {"type": ["null", "string"]},
+        "country": {"type": ["null", "string"]},
+        "associated_adgroup_count": {"type": ["null", "string"]},
+        "spend": {"type": ["null", "string"]},
+        "cpm": {"type": ["null", "string"]},
+        "impressions": {"type": ["null", "string"]},
+        "clicks": {"type": ["null", "string"]},
+        "ctr": {"type": ["null", "string"]},
+        "conversion": {"type": ["null", "string"]},
+        "cost_per_conversion": {"type": ["null", "string"]},
+        "conversion_rate": {"type": ["null", "string"]},
+        "app_install": {"type": ["null", "string"]},
+        "cost_per_app_install": {"type": ["null", "string"]},
+        "app_install_rate": {"type": ["null", "string"]}
+    }
+}

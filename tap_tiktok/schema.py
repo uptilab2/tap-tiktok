@@ -19,7 +19,7 @@ def get_schemas():
         with open(path) as file:
             schemas[file_raw] = json.load(file)
 
-        service, report = file_raw.upper().split("_")
+        service, report = file_raw.upper().split("_", 1)
         metadata[file_raw] = STREAMS["service_type"].get(service, {}).get("report_type", {}).get(report, {})
         metadata[file_raw]["service_type"] = service
         metadata[file_raw]["report_type"] = report

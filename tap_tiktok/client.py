@@ -1,6 +1,7 @@
 
 import singer
 import requests
+import time
 
 
 logger = singer.get_logger()
@@ -56,7 +57,7 @@ class TiktokClient:
         return result["data"]
 
     def request_report(self, stream):
-        service_type, report_type = stream.tap_stream_id.upper().split('_')
+        service_type, report_type = stream.tap_stream_id.upper().split('_', 1)
         mdata = singer.metadata.to_map(stream.metadata)[()]
         dimensions = [f"{self.data_level.split('_')[-1].lower()}_id", self.time_dimension]
         if self.id_dimension and self.id_dimension in mdata.get("dimensions", []):
@@ -79,6 +80,8 @@ class TiktokClient:
         data = []
         total_page = 2
         while total_page > params["page"]:
+            if params["page"] > 1:
+                time.sleep(1/QUERIES_SECOND)
             result = self.do_request(f"{BASE_API_URL}/reports/integrated/get/", params=params)
             data += result["list"]
             params["page"] += 1

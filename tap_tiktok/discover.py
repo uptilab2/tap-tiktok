@@ -1,4 +1,4 @@
-from singer import metadata, get_logger
+from singer import get_logger
 from singer.catalog import Catalog, CatalogEntry, Schema
 from tap_tiktok.schema import get_schemas
 

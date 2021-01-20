@@ -16,10 +16,10 @@ REQUIRED_CONFIG_KEYS = [
 ]
 
 
-def do_discover(config):
+def do_discover():
 
     logger.info('Starting discover')
-    catalog = discover(config)
+    catalog = discover()
     json.dump(catalog.to_dict(), sys.stdout, indent=2)
     logger.info('Finished discover')
 

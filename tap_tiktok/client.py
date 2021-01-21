@@ -13,6 +13,8 @@ QUERIES_SECOND = 10
 QUERIES_MINUTE = 600
 QUERIES_DAY = 864000
 
+DATE_FORMAT = "%Y-%m-%d"
+
 
 class ClientHttpError(Exception):
     pass
@@ -29,14 +31,12 @@ class TiktokClient:
     def __exit__(self, exception_type, exception_value, traceback):
         logger.info("client closed")
 
-    def __init__(self, access_token, advertiser_ids, data_level, id_dimension, time_dimension, start_date, end_date):
+    def __init__(self, access_token, advertiser_ids, data_level, id_dimension, start_date):
         self.access_token = access_token
         self.advertiser_ids = advertiser_ids
-        self.data_level = data_level
+        self.data_level = data_level.upper()
         self.id_dimension = id_dimension
-        self.time_dimension = time_dimension
-        self.start_date = start_date
-        self.end_date = end_date
+        self.start_date = datetime.strptime(start_date, DATE_FORMAT)
 
     def do_request(self, url, params={}):
         headers = {"Access-Token": self.access_token, "Content-Type": "application/json"}
@@ -62,49 +62,54 @@ class TiktokClient:
     def request_report(self, stream):
         service_type, report_type = stream.tap_stream_id.upper().split('_', 1)
         mdata = singer.metadata.to_map(stream.metadata)[()]
-        has_data_level = self.data_level and self.data_level in mdata.get("data_level", {})
+        
+        data_level = f"{service_type}_{self.data_level}"
+        has_data_level = data_level and data_level in mdata.get("data_level", {})
 
         dimensions = []
         if has_data_level:
-            dimensions.append(f"{self.data_level.split('_')[-1].lower()}_id")
-        if self.time_dimension:
-            dimensions.append(self.time_dimension)
+            dimensions.append(f"{self.data_level.lower()}_id")
         if self.id_dimension and self.id_dimension in mdata.get("dimensions", []):
             dimensions.append(self.id_dimension)
 
         yesterday = datetime.now() - timedelta(1)
-        params = {
-            "report_type": report_type,
-            "service_type": service_type,
-            "dimensions": dimensions,
-            "metrics": [
-                m
-                for m in stream.schema.properties.keys()
-                if m not in mdata.get("data_level", {}).get(self.data_level, {}).get("unsupported_metrics", [])
-            ],
-            "start_date": self.start_date or yesterday.strftime("%Y-%m-%d"),
-            "end_date": self.end_date or yesterday.strftime("%Y-%m-%d"),
-            "page": 1,
-            "page_size": 100
-        }
-        if has_data_level:
-            params["data_level"] = self.data_level
+        start_date = self.start_date or yesterday
         data = []
-        total_page = 2
-        while total_page > params["page"]:
-            if params["page"] > 1:
-                time.sleep(1/QUERIES_SECOND)
-            result = self.do_request(f"{BASE_API_URL}/reports/integrated/get/", params=params)
-            data += parse_results(result["list"])
-            params["page"] += 1
-            total_page = result["page_info"]["total_page"]
+        for day in [start_date + timedelta(days=x) for x in range((yesterday-start_date).days + 1)]:
+            date = day.strftime(DATE_FORMAT)
+            params = {
+                "report_type": report_type,
+                "service_type": service_type,
+                "dimensions": dimensions,
+                "metrics": [
+                    m
+                    for m in stream.schema.properties.keys()
+                    if m not in mdata.get("data_level", {}).get(data_level, {}).get("unsupported_metrics", [])
+                ],
+                "start_date": date,
+                "end_date": date,
+                "page": 1,
+                "page_size": 100
+            }
+            if has_data_level:
+                params["data_level"] = data_level
+            
+            total_page = 2
+            while total_page > params["page"]:
+                if params["page"] > 1:
+                    time.sleep(1/QUERIES_SECOND)
+                result = self.do_request(f"{BASE_API_URL}/reports/integrated/get/", params=params)
+                data += parse_results(result["list"], date)
+                params["page"] += 1
+                total_page = result["page_info"]["total_page"]
 
         return data
 
 
-def parse_results(result):
+def parse_results(result, date):
     return [
         {
+            "date": date,
             **r["metrics"],
             **r["dimensions"]
         }

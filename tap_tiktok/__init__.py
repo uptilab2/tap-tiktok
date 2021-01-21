@@ -73,9 +73,7 @@ def main():
         config['advertiser_ids'],
         config.get('data_level'),
         config.get('id_dimension'),
-        config.get('time_dimension'),
         config.get('start_date'),
-        config.get('end_date')
     ) as client:
         if parsed_args.discover:
             do_discover()

@@ -108,10 +108,14 @@ class TiktokClient:
 
 
 def parse_results(result, date):
+    logger.critical(result[0]["metrics"])
     return [
         {
             "date": date,
-            **r["metrics"],
+            **{
+                key: None if val == "-" else val
+                for key, val in r["metrics"].items()
+            },
             **r["dimensions"]
         }
         for r in result

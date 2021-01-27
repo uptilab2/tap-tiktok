@@ -46,10 +46,9 @@ class TiktokClient:
             headers=headers,
             json=params
         )
-        logger.info(f'request api: {url}, response status: {response.status_code}')
+        logger.info(f'request api - response status: {response.status_code}')
 
         result = response.json()
-        logger.info(result)
         if response.status_code == 429:
             raise ClientHttpError('Too many requests, retry ..')
         elif response.status_code == 401:
@@ -77,6 +76,7 @@ class TiktokClient:
         data = []
         for day in [start_date + timedelta(days=x) for x in range((yesterday-start_date).days + 1)]:
             date = day.strftime(DATE_FORMAT)
+            logger.info(f"Request for date {date}")
             params = {
                 "report_type": report_type,
                 "service_type": service_type,
@@ -95,7 +95,8 @@ class TiktokClient:
                 params["data_level"] = data_level
             
             total_page = 2
-            while total_page > params["page"]:
+            while total_page >= params["page"]:
+                logger.info(f"...page {params['page']}/{total_page}...")
                 if params["page"] > 1:
                     time.sleep(1/QUERIES_SECOND)
                 result = self.do_request(f"{BASE_API_URL}/reports/integrated/get/", params=params)

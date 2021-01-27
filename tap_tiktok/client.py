@@ -108,7 +108,6 @@ class TiktokClient:
 
 
 def parse_results(result, date):
-    logger.critical(result[0]["metrics"])
     return [
         {
             "date": date,

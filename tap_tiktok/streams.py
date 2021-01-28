@@ -7,23 +7,23 @@ STREAMS = {
                 "BASIC": {
                     "data_level": {
                         "AUCTION_AD": {
-                            "unsupported_metrics": ["stat_time_day", "profile_visites", "cost_per_total_ratings", "profile_visites_rate",
+                            "unsupported_metrics": ["date", "stat_time_day", "profile_visites", "cost_per_total_ratings", "profile_visites_rate",
                                                     "comments", "advertiser_id", "shares", "aeo_type", "stat_time_hour",
                                                     "app_event_cost_per_add_to_cart", "likes"],
                         },
                         "AUCTION_ADGROUP": {
-                            "unsupported_metrics": ["ad_id", "stat_time_day", "ad_text", "adgroup_id", "cost_per_total_ratings", "profile_visites_rate",
+                            "unsupported_metrics": ["date", "ad_id", "stat_time_day", "ad_text", "adgroup_id", "cost_per_total_ratings", "profile_visites_rate",
                                                     "shares", "advertiser_id", "ad_name", "comments", "stat_time_hour", "profile_visites",
                                                     "app_event_cost_per_add_to_cart", "likes"],
                         },
                         "AUCTION_ADVERTISER": {
-                            "unsupported_metrics": ["ad_id", "stat_time_day", "profile_visites", "ad_text", "adgroup_id", "cost_per_total_ratings",
+                            "unsupported_metrics": ["date", "ad_id", "stat_time_day", "profile_visites", "ad_text", "adgroup_id", "cost_per_total_ratings",
                                                     "profile_visites_rate", "campaign_id", "shares", "advertiser_id", "adgroup_name", "ad_name",
                                                     "comments", "stat_time_hour", "aeo_type", "campaign_name", "app_event_cost_per_add_to_cart",
                                                     "likes"],
                         },
                         "AUCTION_CAMPAIGN": {
-                            "unsupported_metrics": ["ad_id", "stat_time_day", "ad_text", "adgroup_id", "cost_per_total_ratings", "profile_visites_rate",
+                            "unsupported_metrics": ["date", "ad_id", "stat_time_day", "ad_text", "adgroup_id", "cost_per_total_ratings", "profile_visites_rate",
                                                     "campaign_id", "shares", "advertiser_id", "adgroup_name", "ad_name", "comments", "stat_time_hour",
                                                     "aeo_type", "profile_visites", "app_event_cost_per_add_to_cart", "likes"],
                         }
@@ -31,10 +31,18 @@ STREAMS = {
                 },
                 "AUDIENCE": {
                     "data_level": {
-                        "AUCTION_AD": {},
-                        "AUCTION_ADGROUP": {},
-                        "AUCTION_ADVERTISER": {},
-                        "AUCTION_CAMPAIGN": {}
+                        "AUCTION_AD": {
+                            "unsupported_metrics": ["date"]
+                        },
+                        "AUCTION_ADGROUP": {
+                            "unsupported_metrics": ["date"]
+                        },
+                        "AUCTION_ADVERTISER": {
+                            "unsupported_metrics": ["date"]
+                        },
+                        "AUCTION_CAMPAIGN": {
+                            "unsupported_metrics": ["date"]
+                        }
                     },
                     "dimensions": ["gender", "age", "country_code", "ac", "language", "platform", "interest_category", "placement"]
                 },
@@ -47,9 +55,15 @@ STREAMS = {
             "report_type": {
                 "BASIC": {
                     "data_level": {
-                        "RESERVATION_AD": {},
-                        "RESERVATION_ADVERTISER": {},
-                        "RESERVATION_CAMPAIGN": {},
+                        "RESERVATION_AD": {
+                            "unsupported_metrics": ["date"]
+                        },
+                        "RESERVATION_ADVERTISER": {
+                            "unsupported_metrics": ["date"]
+                        },
+                        "RESERVATION_CAMPAIGN": {
+                            "unsupported_metrics": ["date"]
+                        },
                     },
                 },
             },

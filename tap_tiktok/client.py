@@ -91,6 +91,7 @@ class TiktokClient:
                 "page": 1,
                 "page_size": 100
             }
+            logger.critical(params)
             if has_data_level:
                 params["data_level"] = data_level
             
@@ -112,8 +113,9 @@ def parse_results(result, date):
         {
             "date": date,
             **{
-                key: None if val == "-" else val
+                key: val
                 for key, val in r["metrics"].items()
+                if val != "-"
             },
             **r["dimensions"]
         }

@@ -96,6 +96,7 @@ class TiktokClient:
                 params["data_level"] = data_level
             
             total_page = 2
+            date = day.strftime("%Y-%m-%d 00:00")
             while total_page >= params["page"]:
                 logger.info(f"...page {params['page']}/{total_page}...")
                 if params["page"] > 1:

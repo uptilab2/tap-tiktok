@@ -70,7 +70,7 @@ def main():
     config = parsed_args.config
     with TiktokClient(
         config['access_token'],
-        config['advertiser_ids'],
+        config['advertiser_id'],
         config.get('data_level'),
         config.get('id_dimension'),
         config.get('start_date'),

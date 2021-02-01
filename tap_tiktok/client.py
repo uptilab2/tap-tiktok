@@ -1,8 +1,6 @@
 
 import singer
 import requests
-import time
-from datetime import datetime, timedelta
 
 
 logger = singer.get_logger()
@@ -31,12 +29,9 @@ class TiktokClient:
     def __exit__(self, exception_type, exception_value, traceback):
         logger.info("client closed")
 
-    def __init__(self, access_token, advertiser_id, data_level, id_dimension, start_date):
+    def __init__(self, access_token, advertiser_id):
         self.access_token = access_token
         self.advertiser_ids = advertiser_id.split(",")
-        self.data_level = data_level.upper()
-        self.id_dimension = id_dimension
-        self.start_date = datetime.strptime(start_date, DATE_FORMAT)
 
     @singer.utils.ratelimit(600, 60)
     def do_request(self, url, params={}):
@@ -58,53 +53,36 @@ class TiktokClient:
                 raise ClientHttpError(f"[{result.get('code', 0)}] {result['message']}")
         return result["data"]
 
-    def request_report(self, stream):
-        service_type, report_type = stream.tap_stream_id.upper().split('_', 1)
+    def request_report(self, stream, day):
         mdata = singer.metadata.to_map(stream.metadata)[()]
-        
-        data_level = f"{service_type}_{self.data_level}"
-        has_data_level = data_level and data_level in mdata.get("data_level", {})
-
-        dimensions = []
-        if has_data_level:
-            dimensions.append(f"{self.data_level.lower()}_id")
-        if self.id_dimension and self.id_dimension in mdata.get("dimensions", []):
-            dimensions.append(self.id_dimension)
-
-        yesterday = datetime.now() - timedelta(1)
-        start_date = self.start_date or yesterday
         data = []
-        for day in [start_date + timedelta(days=x) for x in range((yesterday-start_date).days + 1)]:
-            date = day.strftime(DATE_FORMAT)
-            date_time = day.strftime("%Y-%m-%d 00:00")
-            logger.info(f"Request for date {date}")
-            for advertiser_id in self.advertiser_ids:
-                logger.info(f"advertiser {advertiser_id}")
-                params = {
-                    "advertiser_id": advertiser_id,
-                    "report_type": report_type,
-                    "service_type": service_type,
-                    "dimensions": dimensions,
-                    "metrics": [
-                        m
-                        for m in stream.schema.properties.keys()
-                        if m not in mdata.get("data_level", {}).get(data_level, {}).get("unsupported_metrics", [])
-                    ],
-                    "start_date": date,
-                    "end_date": date,
-                    "page": 1,
-                    "page_size": 1000
-                }
-                if has_data_level:
-                    params["data_level"] = data_level
-                
-                total_page = 2
-                while total_page >= params["page"]:
-                    logger.info(f"...page {params['page']}/{total_page}...")
-                    result = self.do_request(f"{BASE_API_URL}/reports/integrated/get/", params=params)
-                    data += parse_results(result["list"], date_time)
-                    params["page"] += 1
-                    total_page = result["page_info"]["total_page"]
+        date = day.strftime(DATE_FORMAT)
+        date_time = day.strftime("%Y-%m-%d 00:00")
+        logger.info(f"Request for date {date}")
+        for advertiser_id in self.advertiser_ids:
+            logger.info(f"advertiser {advertiser_id}")
+            params = {
+                "advertiser_id": advertiser_id,
+                "metrics": [
+                    m
+                    for m in stream.schema.properties.keys()
+                    if m not in mdata.get("dimensions", [])
+                    and m != "date"
+                ],
+                "start_date": date,
+                "end_date": date,
+                "page": 1,
+                "page_size": 1000
+            }
+            params.update(mdata)
+
+            total_page = 2
+            while total_page >= params["page"]:
+                logger.info(f"...page {params['page']}/{total_page}...")
+                result = self.do_request(f"{BASE_API_URL}/reports/integrated/get/", params=params)
+                data += parse_results(result["list"], date_time)
+                params["page"] += 1
+                total_page = result["page_info"]["total_page"]
 
         return data
 

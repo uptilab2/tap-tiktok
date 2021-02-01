@@ -2,8 +2,9 @@
 import sys
 import json
 import singer
+from datetime import datetime, timedelta
 from tap_tiktok.discover import discover
-from tap_tiktok.client import TiktokClient
+from tap_tiktok.client import TiktokClient, DATE_FORMAT
 
 
 API_URL = "https://ads.tiktok.com/open_api"
@@ -12,7 +13,7 @@ logger = singer.get_logger()
 
 REQUIRED_CONFIG_KEYS = [
     "access_token",
-    "advertiser_ids",
+    "advertiser_id",
 ]
 
 
@@ -28,38 +29,26 @@ def sync(client, config, state, catalog):
     """ Sync data from tap source """
     # Loop over selected streams in catalog
     for stream in catalog.get_selected_streams(state):
-        logger.info("Syncing stream:" + stream.tap_stream_id)
-
-        bookmark_column = stream.replication_key
-        is_sorted = True  # TODO: indicate whether data is sorted ascending on bookmark value
+        stream_id = stream.tap_stream_id
+        logger.info("Syncing stream:" + stream_id)
 
         singer.write_schema(
-            stream_name=stream.tap_stream_id,
+            stream_name=stream_id,
             schema=stream.schema.to_dict(),
             key_properties=stream.key_properties,
         )
 
-        # TODO: delete and replace this inline function with your own data retrieval process:
-        tap_data = client.request_report(stream)
-        max_bookmark = None
-        for row in tap_data:
-            # TODO: place type conversions or transformations here
+        yesterday = datetime.now() - timedelta(1)
+        day = state.get(stream_id) or config.get('start_date')
+        day = day and datetime.strptime(day, DATE_FORMAT) or yesterday
 
-            # write one or more rows to the stream:
-            singer.write_records(stream.tap_stream_id, [row])
-            if bookmark_column:
-                if is_sorted:
-                    # update bookmark to latest value
-                    singer.write_state({stream.tap_stream_id: row[bookmark_column]})
-                else:
-                    # if data unsorted, save max value until end of writes
-                    max_bookmark = max(max_bookmark, row[bookmark_column])
-        if bookmark_column and not is_sorted:
-            singer.write_state({stream.tap_stream_id: max_bookmark})
+        while day <= yesterday:
+            tap_data = client.request_report(stream, day)
+            singer.write_records(stream_id, tap_data)
+            state[stream_id] = day.strftime(DATE_FORMAT)
+            singer.write_state(state)
+            day += timedelta(1)
 
-        bookmark = singer.get_bookmark(state, stream.tap_stream_id, config.get('advertiser_id'), {})
-        if not bookmark:
-            bookmark['date'] = config.get('start_date')
     return
 
 
@@ -70,10 +59,7 @@ def main():
     config = parsed_args.config
     with TiktokClient(
         config['access_token'],
-        config['advertiser_id'],
-        config.get('data_level'),
-        config.get('id_dimension'),
-        config.get('start_date'),
+        config['advertiser_id']
     ) as client:
         if parsed_args.discover:
             do_discover()

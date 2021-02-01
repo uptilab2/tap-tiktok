@@ -2,8 +2,6 @@
     "type": ["null", "object"],
 	"additionalProperties": false,
     "properties": {
-        "date": {"type": ["null", "string"], "format": "date-time"},
-        "country_code": {"type": ["null", "string"]},
         "playable_id": {"type": ["null", "integer"]},
         "playable_name": {"type": ["null", "string"]},
         "playable_url": {"type": ["null", "string"]},

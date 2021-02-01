@@ -16,14 +16,9 @@ This tap:
 ### Config
 ```
 {
-  "access_token": string, 
-  "data_level": [one of : AD, ADGROUP, ADVERTISER, CAMPAIGN]
-  "id_dimension": [one of : 
-      - for audience : gender, age, country_code, ac, language, platform, interest_category, placement
-      - for playable material : playable_id, country_code
-  ]
-  "start_date": YYYY-MM-DD,
-  "advertiser_id": coma separated string
+  "access_token": string,
+  "start_date": string (YYYY-MM-DD),
+  "advertiser_id": comma separated string
 }
 ```
 

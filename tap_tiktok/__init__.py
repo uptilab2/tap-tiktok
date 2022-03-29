@@ -7,7 +7,6 @@ from tap_tiktok.discover import discover
 from tap_tiktok.client import TiktokClient, DATE_FORMAT
 
 
-API_URL = "https://ads.tiktok.com/open_api"
 logger = singer.get_logger()
 
 

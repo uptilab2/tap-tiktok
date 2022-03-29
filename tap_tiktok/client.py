@@ -4,7 +4,7 @@ import requests
 
 
 logger = singer.get_logger()
-BASE_API_URL = 'https://ads.tiktok.com/open_api/v1.1'
+BASE_API_URL = 'https://ads.tiktok.com/open_api/v1.2'
 
 # query limits
 QUERIES_SECOND = 10

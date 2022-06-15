@@ -38,15 +38,16 @@ def sync(client, config, state, catalog):
         )
 
         yesterday = datetime.now() - timedelta(1)
-        day = state.get(stream_id) or config.get('start_date')
-        day = day and datetime.strptime(day, DATE_FORMAT) or yesterday
+        end_day = state.get(stream_id) or config.get('start_date')
+        end_day = end_day and datetime.strptime(end_day, DATE_FORMAT) or yesterday
 
-        while day <= yesterday:
-            tap_data = client.request_report(stream, day)
+        while end_day <= yesterday:
+            start_day = end_day - timedelta(int(config.get('window_size', '0')))
+            tap_data = client.request_report(stream, start_day, end_day)
             singer.write_records(stream_id, tap_data)
-            state[stream_id] = day.strftime(DATE_FORMAT)
+            state[stream_id] = end_day.strftime(DATE_FORMAT)
             singer.write_state(state)
-            day += timedelta(1)
+            end_day += timedelta(1)
 
     return
 

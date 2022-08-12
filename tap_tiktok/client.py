@@ -53,13 +53,12 @@ class TiktokClient:
                 raise ClientHttpError(f"[{result.get('code', 0)}] {result['message']}")
         return result["data"]
 
-    def request_report(self, stream, start_day, end_day):
+    def request_report(self, stream, day):
         mdata = singer.metadata.to_map(stream.metadata)[()]
         data = []
-        e_date = end_day.strftime(DATE_FORMAT)
-        s_date = start_day.strftime(DATE_FORMAT)
-        date_time = end_day.strftime("%Y-%m-%d 00:00")
-        logger.info(f"Request for date {e_date}")
+        date = day.strftime(DATE_FORMAT)
+        date_time = day.strftime("%Y-%m-%d 00:00")
+        logger.info(f"Request for date {date}")
         for advertiser_id in self.advertiser_ids:
             logger.info(f"advertiser {advertiser_id}")
             params = {
@@ -70,8 +69,8 @@ class TiktokClient:
                     if m not in mdata.get("dimensions", [])
                     and m != "date"
                 ],
-                "start_date": s_date,
-                "end_date": e_date,
+                "start_date": date,
+                "end_date": date,
                 "page": 1,
                 "page_size": 1000
             }

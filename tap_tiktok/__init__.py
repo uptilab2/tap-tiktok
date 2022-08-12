@@ -40,6 +40,7 @@ def sync(client, config, state, catalog):
         yesterday = datetime.now() - timedelta(1)
         day = state.get(stream_id) or config.get('start_date')
         day = day and datetime.strptime(day, DATE_FORMAT) or yesterday
+        day = day - timedelta(int(config.get('window_size', '0')))
 
         while day <= yesterday:
             tap_data = client.request_report(stream, day)
